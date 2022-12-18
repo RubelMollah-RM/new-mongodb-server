@@ -21,12 +21,19 @@ async function run() {
     await client.connect();
     const userCollection = client.db('foodExpress').collection('user');
 
-    app.get('/user', async(req, res) =>{
+    app.get('/user', async (req, res) => {
       const qurey = {}
       const cursor = userCollection.find(qurey);
       const users = await cursor.toArray();
       res.send(users)
-    })
+    });
+
+    app.get('/updated/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
 
     app.post('/user', async (req, res) => {
       const newUser = req.body;
@@ -37,10 +44,27 @@ async function run() {
 
     //delete operation
 
-    app.delete('/user/:id', async(req, res) =>{
+    app.delete('/user/:id', async (req, res) => {
       const id = req.params.id;
-      const qurey = {_id:ObjectId(id)}
+      const qurey = { _id: ObjectId(id) }
       const result = await userCollection.deleteOne(qurey);
+      res.send(result);
+    });
+
+    //updated user
+
+    app.put('/updated/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedUser = req.body;
+      const filter = { _id: ObjectId(id) };
+      const option = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          name: updatedUser.name,
+          email: updatedUser.email
+        }
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc, option)
       res.send(result);
     })
 
